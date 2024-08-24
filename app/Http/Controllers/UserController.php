@@ -17,7 +17,7 @@ class UserController extends Controller
         ]);
         $currentUser = $request->user();
         $currentUser->update($fields);
-        return ['message' => 'Updated successfully', 'user'=> $currentUser];
+        return ['message' => 'Updated successfully', 'user'=> $currentUser->load('role'),];
     }
 
     public function updateUserPassword(Request $request){

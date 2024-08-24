@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -17,11 +18,16 @@ class AuthController extends Controller
             'password'=>'required|confirmed|min:8'
         ]);
 
+        
+
         $user = User::create($fieds);
-
+        $role = new Role();
+        $role->user_id = $user->id;
+        $role->save();
         $token = $user->createToken($request->name);
+        
 
-        return ['user' => $user, 'plainTextToken' => $token->plainTextToken];
+        return ['user' => $user->load('role'), 'plainTextToken' => $token->plainTextToken];
     }
     public function Login (Request $request){
         $request->validate([
@@ -29,7 +35,7 @@ class AuthController extends Controller
             'password' => 'required|min:8'
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $user = User::where('email', $request->email)->with(['role', 'logs'])->first();
 
         if(!$user || !Hash::check($request->password, $user->password)){
 
@@ -38,8 +44,10 @@ class AuthController extends Controller
             //     "message" => "The provided Credential are invalid"
             // ];
         }
-         $token = $user->createToken($user->name);
-        return['user' => $user, 'plainTextToken'=>$token->plainTextToken];
+       
+        $token = $user->createToken($user->name);
+         
+        return['user' => $user,  'plainTextToken'=>$token->plainTextToken];
     }
     public function Logout (Request $request){
         $request->user()->tokens()->delete();
